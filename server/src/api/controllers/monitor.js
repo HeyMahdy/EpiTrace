@@ -1,5 +1,5 @@
-import { createMonitor } from "../../services/monitor";
-import { createMonitorSchema } from "../validators/monitor";
+import { createMonitor } from "../../services/monitor.js";
+import { createMonitorSchema } from "../validators/monitor.js";
 
 export async function createMonitorController(req, res) {
   try {

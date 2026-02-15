@@ -1,4 +1,4 @@
-import queryDB from "../config/db";
+import queryDB from "../config/db.js";
 
 export async function createMonitor(userId, data) {
   const {

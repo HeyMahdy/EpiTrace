@@ -1,5 +1,5 @@
 import express from 'express';
-import { createMonitorController } from '../controllers/monitor';
+import { createMonitorController } from '../controllers/monitor.js';
 
 const router = express.Router();
 
