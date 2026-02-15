@@ -2,9 +2,9 @@ import { Redis } from 'ioredis';
 
 
 const myRedisConnection = new Redis({
-  host: '',
-  port: 0,
-  password: "",
+  host: 'innocent-lark-6388.upstash.io',
+  port: 6379,
+  password: "ARj0AAImcDI5MWJlYTU0NGVlNmM0YzQ3OWMyMTZjN2E5MDVhOGVmM3AyNjM4OA",
   tls: { rejectUnauthorized: false },
   maxRetriesPerRequest: null
 });

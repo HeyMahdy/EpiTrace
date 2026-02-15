@@ -1,0 +1,2 @@
+Task started: 1771179387842
+The technical breakdown of the root cause for the "User not found" error in the `PUT /users/:id` endpoint has been successfully written to `/incident/report.md`. The issue was identified as a bug in the SQL query, where the `email` column was incorrectly used in the WHERE clause instead of the `id` column. The report includes a detailed analysis and a proposed solution to correct the SQL query.

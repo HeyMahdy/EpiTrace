@@ -4,6 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "start": "node src/server.js",
+    "worker": "node src/worker/consumer.js",
+    "fake-jobs": "node src/worker/fakeJobCreator.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
