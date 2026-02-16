@@ -10,6 +10,21 @@
     "server": "npm --workspace server run dev",
     "server:start": "npm --workspace server run start",
     "cli": "npm --workspace cli run dev",
-    "cli:start": "npm --workspace cli run start"
+    "cli:start": "npm --workspace cli run start",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "bullmq": "^5.69.1",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "ioredis": "^5.9.3",
+    "jsonwebtoken": "^9.0.3",
+    "pg": "^8.18.0",
+    "zod": "^4.3.6"
   }
 }
