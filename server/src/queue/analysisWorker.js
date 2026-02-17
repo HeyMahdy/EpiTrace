@@ -3,7 +3,7 @@ import axios from "axios";
 import { pool } from "../config/db.js";
 import { connection } from "../config/redis.js";
 import { analysisQueue } from "./analysisQueue.js";
-
+import { downQueue } from "./downQueue.js";
 /**
  * Runs when a monitor is started.
  * 1. Performs immediate check
@@ -99,6 +99,14 @@ async function performCheck(monitorId) {
       [monitorId, isUp ? "UP" : "DOWN", responseTimeMs, response.status],
     );
 
+    if (!isUp) {
+      await downQueue.add("monitor-down", {
+        monitorId,
+        url: monitor.url,
+        repo_link: monitor.repo_link
+      })
+    }
+
     // Update monitor current status
     await pool.query(
       `UPDATE monitors
@@ -116,6 +124,12 @@ async function performCheck(monitorId) {
      VALUES ($1, 'DOWN', $2)`,
       [monitorId, error.message],
     );
+
+    await downQueue.add("down-monitors", {
+      monitorId,
+      url: monitor.url,
+      repo_link: monitor.repo_link,
+    });
 
     await pool.query(
       `UPDATE monitors

@@ -11,8 +11,8 @@ export async function createMonitor(userId, data) {
 
     const insertQuery = `
       INSERT INTO monitors
-      (user_id, name, url, method, request_header, request_body, check_interval, timeout, is_active)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+      (user_id, name, url, repo_link, method, request_header, request_body, check_interval, timeout, is_active)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
       RETURNING *;
     `;
 
@@ -20,6 +20,7 @@ export async function createMonitor(userId, data) {
       userId,
       data.name,
       data.url,
+      data.repo_link,
       data.method,
       data.request_header || {},
       data.request_body || {},
@@ -117,6 +118,7 @@ export async function updateMonitor(userId, monitorId, updates) {
   const allowedFields = [
     "name",
     "url",
+    "repo_link",
     "method",
     "request_header",
     "request_body",

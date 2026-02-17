@@ -3,6 +3,7 @@ import { z } from "zod";
 export const createMonitorSchema = z.object({
   name: z.string().min(1, "Name is required"),
   url: z.url("Invalid URL format"),
+  repo_link: z.url("Invalid repo link format"),
   method: z.enum(
     ["GET", "POST", "PUT", "DELETE", "PATCH"],
     "Invalid HTTP method",
@@ -20,6 +21,7 @@ export const createMonitorSchema = z.object({
 export const updateMonitorSchema = z.object({
   name: z.string().min(1).optional(),
   url: z.url().optional(),
+  repo_link: z.url().optional(),
   method: z.enum(["GET", "POST", "PUT", "DELETE", "PATCH"]).optional(),
   request_header: z.record(z.any()).optional(),
   request_body: z.any().optional(),
