@@ -110,7 +110,7 @@ async function performCheck(monitorId) {
         console.log(`[down-monitors] skipped (cooldown active) for monitor ${monitorId}`);
       } else {
         // Set cooldown for 30 minutes
-        await connection.setex(cooldownKey, 30 * 60, '1');
+        await connection.setex(cooldownKey, 5 * 60, '1');
         
         const downJob = await downQueue.add(
           "monitor-down",
@@ -157,7 +157,7 @@ async function performCheck(monitorId) {
       console.log(`[down-monitors] skipped (cooldown active) for monitor ${monitorId}`);
     } else {
       // Set cooldown for 30 minutes
-      await connection.setex(cooldownKey, 30 * 60, '1');
+      await connection.setex(cooldownKey, 5 * 60, '1');
       
       const downJob = await downQueue.add(
         "monitor-down",
