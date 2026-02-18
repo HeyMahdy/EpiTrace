@@ -11,7 +11,7 @@ const monitorAlertSchema = z.object({
 });
 
 const analysisAlertSchema = z.object({
-  extractedAnalysis: z.string().min(1),
+  extractedAnalysis: z.string().optional(),
   jobId: z.union([z.string(), z.number()]),
   git_hub_repo: z.string().url(),
   error_message: z.string().optional(),
