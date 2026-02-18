@@ -101,11 +101,22 @@ async function performCheck(monitorId) {
 
     if (!isUp) {
       console.log(`[down-monitors] enqueue requested (HTTP ${response.status}) for monitor ${monitorId}`);
-      const downJob = await downQueue.add("monitor-down", {
-        error_message: `Monitor returned HTTP ${response.status}`,
-        endpoint: monitor.url,
-        git_hub_repo: monitor.repo_link,
-      });
+      
+      // Create 30-min bucket-based jobId for dedup
+      const thirtyMinMs = 30 * 60 * 1000;
+      const bucket = Math.floor(Date.now() / thirtyMinMs);
+      const jobId = `monitor-down:${monitorId}:${bucket}`;
+      
+      const downJob = await downQueue.add(
+        "monitor-down",
+        {
+          monitorId,
+          error_message: `Monitor returned HTTP ${response.status}`,
+          endpoint: monitor.url,
+          git_hub_repo: monitor.repo_link,
+        },
+        { jobId }
+      );
       console.log(
         `[down-monitors] enqueued job id=${downJob.id} name=${downJob.name} monitor=${monitorId}`,
       );
@@ -132,11 +143,22 @@ async function performCheck(monitorId) {
     console.log(
       `[down-monitors] enqueue requested (request error) for monitor ${monitorId}: ${error.message}`,
     );
-    const downJob = await downQueue.add("down-monitors", {
-      error_message: error.message,
-      endpoint: monitor.url,
-      git_hub_repo: monitor.repo_link,
-    });
+    
+    // Create 30-min bucket-based jobId for dedup
+    const thirtyMinMs = 30 * 60 * 1000;
+    const bucket = Math.floor(Date.now() / thirtyMinMs);
+    const jobId = `monitor-down:${monitorId}:${bucket}`;
+    
+    const downJob = await downQueue.add(
+      "monitor-down",
+      {
+        monitorId,
+        error_message: error.message,
+        endpoint: monitor.url,
+        git_hub_repo: monitor.repo_link,
+      },
+      { jobId }
+    );
     console.log(
       `[down-monitors] enqueued job id=${downJob.id} name=${downJob.name} monitor=${monitorId}`,
     );
