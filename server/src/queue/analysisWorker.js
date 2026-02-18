@@ -100,11 +100,15 @@ async function performCheck(monitorId) {
     );
 
     if (!isUp) {
-      await downQueue.add("monitor-down", {
-        monitorId,
-        url: monitor.url,
-        repo_link: monitor.repo_link
-      })
+      console.log(`[down-monitors] enqueue requested (HTTP ${response.status}) for monitor ${monitorId}`);
+      const downJob = await downQueue.add("monitor-down", {
+        error_message: `Monitor returned HTTP ${response.status}`,
+        endpoint: monitor.url,
+        git_hub_repo: monitor.repo_link,
+      });
+      console.log(
+        `[down-monitors] enqueued job id=${downJob.id} name=${downJob.name} monitor=${monitorId}`,
+      );
     }
 
     // Update monitor current status
@@ -125,11 +129,17 @@ async function performCheck(monitorId) {
       [monitorId, error.message],
     );
 
-    await downQueue.add("down-monitors", {
-      monitorId,
-      url: monitor.url,
-      repo_link: monitor.repo_link,
+    console.log(
+      `[down-monitors] enqueue requested (request error) for monitor ${monitorId}: ${error.message}`,
+    );
+    const downJob = await downQueue.add("down-monitors", {
+      error_message: error.message,
+      endpoint: monitor.url,
+      git_hub_repo: monitor.repo_link,
     });
+    console.log(
+      `[down-monitors] enqueued job id=${downJob.id} name=${downJob.name} monitor=${monitorId}`,
+    );
 
     await pool.query(
       `UPDATE monitors

@@ -4,18 +4,32 @@ const path = require("path");
 const { spawn } = require("child_process");
 const { Worker, Job } = require("bullmq");
 const axios = require("axios");
-const myRedisConnection = require("../shared/redisConnection");
+const myRedisConnection = require("./radis.config");
 
+const API_BASE_URL = (process.env.API_BASE_URL || "http://localhost:8080").replace(/\/$/, "");
+const ALERT_ENDPOINT = `${API_BASE_URL}/alert/send`;
 
 const agent_worker = new Worker(
-  "agent",
+  "down-monitors",
   async (Job) => {
     // 1. Data Validation
-    const { error_message, endpoint, git_hub_repo } = Job.data;
+    const error_message =
+      Job.data.error_message ||
+      `Monitor failure${Job.data.status_code ? ` (HTTP ${Job.data.status_code})` : ""}`;
+    const endpoint = Job.data.endpoint || Job.data.url;
+    const git_hub_repo = Job.data.git_hub_repo || Job.data.repo_link;
 
-    if (!error_message || !endpoint || !git_hub_repo) {
-      throw new Error(`Job ${Job.id} is missing required data. Check the payload.`);
-    } 
+    const missingFields = [];
+    if (!error_message) missingFields.push("error_message");
+    if (!endpoint) missingFields.push("endpoint");
+    if (!git_hub_repo) missingFields.push("git_hub_repo");
+    if (missingFields.length) {
+      throw new Error(
+        `Job ${Job.id} is missing required data: ${missingFields.join(", ")}. Payload=${JSON.stringify(
+          Job.data,
+        )}`,
+      );
+    }
 
     // 2. Return the Promise
     return new Promise((resolve, reject) => {
@@ -43,17 +57,17 @@ const agent_worker = new Worker(
           console.log(finalAnalysis);
 
           try {
-            const response = await axios.post(endpoint, {
+            const response = await axios.post(ALERT_ENDPOINT, {
               extractedAnalysis: finalAnalysis,
               jobId: Job.id,
               git_hub_repo,
               error_message,
             });
-            console.log(`Analysis sent to ${endpoint} with status ${response.status}`);
+            console.log(`Analysis sent to ${ALERT_ENDPOINT} with status ${response.status}`);
             resolve(finalAnalysis);
           } catch (error) {
             const errMsg = error.response?.data || error.message;
-            reject(new Error(`Failed to send analysis to endpoint ${endpoint}: ${JSON.stringify(errMsg)}`));
+            reject(new Error(`Failed to send analysis to endpoint ${ALERT_ENDPOINT}: ${JSON.stringify(errMsg)}`));
           }
         } else {
           // Any other code (1, 2, 127, etc.) means something broke.
@@ -68,4 +82,3 @@ const agent_worker = new Worker(
     concurrency: 10
   }
 ); // <-- Closes the
-
