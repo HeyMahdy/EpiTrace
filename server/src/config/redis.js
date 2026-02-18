@@ -3,9 +3,9 @@ import { Redis } from 'ioredis';
 
 
 export const connection = new Redis({
-host: 'innocent-lark-6388.upstash.io',
+host: 'handy-gazelle-16467.upstash.io',
   port: 6379,
-  password: "ARj0AAImcDI5MWJlYTU0NGVlNmM0YzQ3OWMyMTZjN2E5MDVhOGVmM3AyNjM4OA",
+  password: "AUBTAAIncDFhZDI1NDQwZWM0YWY0NGY0ODVmMDBmNTMxNjkxMTFmMHAxMTY0Njc",
   tls: { rejectUnauthorized: false },
   maxRetriesPerRequest: null
 

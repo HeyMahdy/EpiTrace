@@ -1,5 +1,34 @@
 import axios from "axios";
 import { pool } from "../config/db.js";
+import { connection } from "../config/redis.js";
+
+function getServerBaseUrl() {
+  if (process.env.SERVER_PUBLIC_URL) {
+    return process.env.SERVER_PUBLIC_URL.replace(/\/$/, "");
+  }
+  const port = process.env.PORT || 8080;
+  return `http://localhost:${port}`;
+}
+
+async function createAgentTriggerLink(data) {
+  if (!data.jobId || !data.git_hub_repo || !data.extractedAnalysis) {
+    return null;
+  }
+
+  try {
+    const triggerKey = `agent-trigger:${data.jobId}`;
+    const triggerPayload = {
+      agent_message: data.extractedAnalysis,
+      git_hub_repo: data.git_hub_repo,
+    };
+    await connection.setex(triggerKey, 24 * 60 * 60, JSON.stringify(triggerPayload));
+
+    return `${getServerBaseUrl()}/alert/trigger-agent?jobId=${encodeURIComponent(String(data.jobId))}`;
+  } catch (error) {
+    console.error("Failed to create magic trigger link:", error.message);
+    return null;
+  }
+}
 
 /**
  * Format and send alert to Slack
@@ -78,6 +107,15 @@ async function sendToSlack(data, webhookUrl) {
               value: data.extractedAnalysis,
               short: false,
             },
+            ...(data.trigger_link
+              ? [
+                  {
+                    title: "Auto-Fix",
+                    value: `<${data.trigger_link}|🛠️ Click Here to Launch Auto-Fix>`,
+                    short: false,
+                  },
+                ]
+              : []),
           ],
           footer: "EpiTrace AI Worker",
           ts: Math.floor(Date.now() / 1000),
@@ -168,6 +206,15 @@ async function sendToDiscord(data, webhookUrl) {
               value: data.extractedAnalysis,
               inline: false,
             },
+            ...(data.trigger_link
+              ? [
+                  {
+                    name: "Auto-Fix",
+                    value: `[🛠️ Click Here to Launch Auto-Fix](${data.trigger_link})`,
+                    inline: false,
+                  },
+                ]
+              : []),
           ],
           footer: { text: "EpiTrace AI Worker" },
           timestamp: new Date().toISOString(),
@@ -199,6 +246,8 @@ async function getMonitorWebhooks(monitorId) {
  */
 export async function sendAlert(data) {
   const webhooks = await getMonitorWebhooks(data.monitorId);
+  const trigger_link = await createAgentTriggerLink(data);
+  const alertData = trigger_link ? { ...data, trigger_link } : data;
   
   if (!webhooks.length) {
     console.warn(`No webhooks configured for monitor ${data.monitorId}`);
@@ -210,9 +259,9 @@ export async function sendAlert(data) {
     try {
       let result;
       if (webhook.provider === "slack") {
-        result = await sendToSlack(data, webhook.webhook_url);
+        result = await sendToSlack(alertData, webhook.webhook_url);
       } else if (webhook.provider === "discord") {
-        result = await sendToDiscord(data, webhook.webhook_url);
+        result = await sendToDiscord(alertData, webhook.webhook_url);
       } else {
         console.warn(`Unknown notification provider: ${webhook.provider}`);
         continue;

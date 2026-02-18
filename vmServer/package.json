@@ -6,6 +6,10 @@
   "scripts": {
     "start": "node index.js",
     "dev": "node --watch index.js",
+    "worker:analysis": "node --watch ../server/src/queue/analysisWorker.js",
+    "worker:code": "node --watch CodeWorker.js",
+    "code-worker": "node --watch CodeWorker.js",
+    "mock-server": "node --watch mockServer.js",
     "test": "echo \"No tests configured\""
   },
   "keywords": [],
