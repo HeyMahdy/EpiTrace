@@ -89,6 +89,27 @@
  *         timeout:
  *           type: integer
  *           minimum: 1
+ *     CreateWebhookRequest:
+ *       type: object
+ *       required: [provider, webhook_url]
+ *       properties:
+ *         provider:
+ *           type: string
+ *           enum: [slack, discord]
+ *         webhook_url:
+ *           type: string
+ *           format: uri
+ *     UpdateWebhookRequest:
+ *       type: object
+ *       properties:
+ *         provider:
+ *           type: string
+ *           enum: [slack, discord]
+ *         webhook_url:
+ *           type: string
+ *           format: uri
+ *         is_active:
+ *           type: boolean
  */
 
 /**
@@ -338,6 +359,199 @@
  *         description: History list
  *       404:
  *         description: Monitor not found
+ */
+
+/**
+ * @openapi
+ * /webhook:
+ *   post:
+ *     tags: [Webhook]
+ *     summary: Create a new webhook
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateWebhookRequest'
+ *     responses:
+ *       201:
+ *         description: Webhook created
+ *       401:
+ *         description: Unauthorized
+ *       409:
+ *         description: Webhook already exists
+ *       422:
+ *         description: Validation error
+ *       500:
+ *         description: Internal server error
+ *   get:
+ *     tags: [Webhook]
+ *     summary: List all webhooks for authenticated user
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Webhooks list
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @openapi
+ * /webhook/{id}:
+ *   get:
+ *     tags: [Webhook]
+ *     summary: Get webhook by ID
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Webhook details
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Webhook not found
+ *   patch:
+ *     tags: [Webhook]
+ *     summary: Update webhook
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UpdateWebhookRequest'
+ *     responses:
+ *       200:
+ *         description: Webhook updated
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Webhook not found
+ *       422:
+ *         description: Validation error
+ *   delete:
+ *     tags: [Webhook]
+ *     summary: Delete webhook
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Webhook deleted
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Webhook not found
+ */
+
+/**
+ * @openapi
+ * /webhook/monitor/{monitorId}:
+ *   get:
+ *     tags: [Webhook]
+ *     summary: Get all webhooks for a monitor
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: monitorId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Monitor webhooks list
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Monitor not found
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @openapi
+ * /webhook/monitor/{monitorId}/add/{webhookId}:
+ *   post:
+ *     tags: [Webhook]
+ *     summary: Add webhook to monitor
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: monitorId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: webhookId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       201:
+ *         description: Webhook added to monitor
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Monitor or webhook not found
+ *       409:
+ *         description: Webhook already associated
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @openapi
+ * /webhook/monitor/{monitorId}/remove/{webhookId}:
+ *   delete:
+ *     tags: [Webhook]
+ *     summary: Remove webhook from monitor
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: monitorId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: webhookId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Webhook removed from monitor
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Monitor, webhook, or association not found
+ *       500:
+ *         description: Internal server error
  */
 
 export const swaggerDocsLoaded = true;

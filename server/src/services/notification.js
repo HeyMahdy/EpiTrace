@@ -181,31 +181,48 @@ async function sendToDiscord(data, webhookUrl) {
   throw new Error("Unsupported alert payload: expected AI analysis data");
 }
 
-async function getMonitorNotificationSettings(monitorId) {
+async function getMonitorWebhooks(monitorId) {
   const { rows } = await pool.query(
-    "SELECT notification_provider, notification_webhook_url FROM monitors WHERE id = $1",
+    `SELECT uw.* FROM user_webhooks uw
+     INNER JOIN monitor_webhooks mw ON uw.id = mw.webhook_id
+     WHERE mw.monitor_id = $1 AND uw.is_active = true`,
     [monitorId],
   );
 
-  if (!rows.length) throw new Error("Monitor not found");
+  if (!rows.length) throw new Error("No webhooks configured for this monitor");
 
-  return rows[0];
+  return rows;
 }
 
 /**
- * Send alert to configured provider
+ * Send alert to all configured webhooks for a monitor
  */
 export async function sendAlert(data) {
-  const { notification_provider, notification_webhook_url } =
-    await getMonitorNotificationSettings(data.monitorId);
-
-  if (notification_provider === "slack") {
-    return sendToSlack(data, notification_webhook_url);
-  } else if (notification_provider === "discord") {
-    return sendToDiscord(data, notification_webhook_url);
-  } else {
-    throw new Error(
-      `Unknown notification provider: ${notification_provider}`,
-    );
+  const webhooks = await getMonitorWebhooks(data.monitorId);
+  
+  if (!webhooks.length) {
+    console.warn(`No webhooks configured for monitor ${data.monitorId}`);
+    return;
   }
+
+  const results = [];
+  for (const webhook of webhooks) {
+    try {
+      let result;
+      if (webhook.provider === "slack") {
+        result = await sendToSlack(data, webhook.webhook_url);
+      } else if (webhook.provider === "discord") {
+        result = await sendToDiscord(data, webhook.webhook_url);
+      } else {
+        console.warn(`Unknown notification provider: ${webhook.provider}`);
+        continue;
+      }
+      results.push({ webhookId: webhook.id, provider: webhook.provider, success: true });
+    } catch (error) {
+      console.error(`Failed to send alert to ${webhook.provider} webhook:`, error.message);
+      results.push({ webhookId: webhook.id, provider: webhook.provider, success: false, error: error.message });
+    }
+  }
+
+  return results;
 }

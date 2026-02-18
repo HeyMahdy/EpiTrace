@@ -4,8 +4,6 @@ export const createMonitorSchema = z.object({
   name: z.string().min(1, "Name is required"),
   url: z.string().url("Invalid URL format"),
   repo_link: z.string().url("Invalid repo link format"),
-  notification_provider: z.enum(["slack", "discord"]),
-  notification_webhook_url: z.string().url("Invalid webhook URL format"),
   method: z.enum(
     ["GET", "POST", "PUT", "DELETE", "PATCH"],
     "Invalid HTTP method",
@@ -24,13 +22,24 @@ export const updateMonitorSchema = z.object({
   name: z.string().min(1).optional(),
   url: z.string().url().optional(),
   repo_link: z.string().url().optional(),
-  notification_provider: z.enum(["slack", "discord"]).optional(),
-  notification_webhook_url: z.string().url().optional(),
   method: z.enum(["GET", "POST", "PUT", "DELETE", "PATCH"]).optional(),
   request_header: z.record(z.any()).optional(),
   request_body: z.any().optional(),
   check_interval: z.number().int().min(10).optional(),
   timeout: z.number().int().min(1).optional(),
+}).refine(data => Object.keys(data).length > 0, {
+  message: "At least one field must be provided",
+});
+
+export const createWebhookSchema = z.object({
+  provider: z.enum(["slack", "discord"], "Provider must be slack or discord"),
+  webhook_url: z.string().url("Invalid webhook URL format"),
+});
+
+export const updateWebhookSchema = z.object({
+  provider: z.enum(["slack", "discord"]).optional(),
+  webhook_url: z.string().url().optional(),
+  is_active: z.boolean().optional(),
 }).refine(data => Object.keys(data).length > 0, {
   message: "At least one field must be provided",
 });

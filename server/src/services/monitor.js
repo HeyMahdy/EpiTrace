@@ -11,8 +11,8 @@ export async function createMonitor(userId, data) {
 
     const insertQuery = `
       INSERT INTO monitors
-      (user_id, name, url, repo_link, notification_provider, notification_webhook_url, method, request_header, request_body, check_interval, timeout, is_active)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+      (user_id, name, url, repo_link, method, request_header, request_body, check_interval, timeout, is_active)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
       RETURNING *;
     `;
 
@@ -21,8 +21,6 @@ export async function createMonitor(userId, data) {
       data.name,
       data.url,
       data.repo_link,
-      data.notification_provider,
-      data.notification_webhook_url,
       data.method,
       data.request_header || {},
       data.request_body || {},
@@ -121,8 +119,6 @@ export async function updateMonitor(userId, monitorId, updates) {
     "name",
     "url",
     "repo_link",
-    "notification_provider",
-    "notification_webhook_url",
     "method",
     "request_header",
     "request_body",
