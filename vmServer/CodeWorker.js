@@ -2,12 +2,7 @@ require("dotenv").config();
 
 const { spawn } = require("child_process");
 const { Worker } = require("bullmq");
-const axios = require("axios");
 const myRedisConnection = require("./radis.config");
-
-const API_BASE_URL = (process.env.API_BASE_URL || "http://localhost:8080").replace(/\/$/, "");
-const CODE_RESULT_ENDPOINT =
-  process.env.CODE_RESULT_ENDPOINT || `${API_BASE_URL}/alert/send`;
 
 
 const coder_agent = new Worker(
@@ -71,24 +66,7 @@ const coder_agent = new Worker(
           return;
         }
 
-        try {
-          const response = await axios.post(CODE_RESULT_ENDPOINT, {
-            commit_link,
-            jobId: Job.id,
-            git_hub_repo,
-          });
-          console.log(
-            `Commit link sent to ${CODE_RESULT_ENDPOINT} with status ${response.status}`,
-          );
-          resolve(commit_link);
-        } catch (error) {
-          const errMsg = error.response?.data || error.message;
-          reject(
-            new Error(
-              `Failed to send commit link to endpoint ${CODE_RESULT_ENDPOINT}: ${JSON.stringify(errMsg)}`,
-            ),
-          );
-        }
+        resolve(commit_link);
       });
     });
   },
