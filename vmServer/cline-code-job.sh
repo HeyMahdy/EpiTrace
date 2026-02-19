@@ -39,8 +39,27 @@ git checkout -b "$BRANCH_NAME"
 
 echo "Waking up agent 'cline' to do the job..."
 
-# FIX 2: Changed $ERROR_MSG to $agent_message so it matches your input variable
-COMMIT_MSG=$(cline -y "I am providing an error and its solution here: $agent_message. Please implement this solution in the code. Once the fix is applied, your final output to me must be a single, concise Git commit message describing exactly what you changed. Do not write 'Done' or any conversational text. Just the commit message.")
+CLINE_INSTRUCTION=$(cat <<EOF
+You are in the root of the target repository. Apply a real code fix based on the issue description below.
+
+Issue description:
+$agent_message
+
+Required workflow:
+1) Locate the relevant files using repository search.
+2) Implement the fix directly in code (not documentation-only).
+3) Ensure at least one tracked source file is modified.
+4) Verify with "git diff --name-only" that files changed.
+5) Do not stop at analysis; make the code changes.
+
+Output rules:
+- Your final output must be exactly one line.
+- That line must be a concise Git commit message title (max 72 chars).
+- No markdown, no code blocks, no explanations, no conversational text.
+EOF
+)
+
+COMMIT_MSG=$(cline -y "$CLINE_INSTRUCTION")
 
 echo "Agent finished. Checking for changes..."
 

@@ -17,6 +17,8 @@ const coder_agent = new Worker(
     const git_hub_repo = Job.data.git_hub_repo;
     const github_access_token = Job.data.github_access_token
 
+    console.log(agent_message);
+
     const missingFields = [];
     if (!agent_message) missingFields.push("agent_message");
     if (!git_hub_repo) missingFields.push("git_hub_repo");
