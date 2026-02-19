@@ -17,6 +17,7 @@ const PORT = process.env.PORT || 8080;
 const SERVER_PUBLIC_URL = (
   process.env.SERVER_PUBLIC_URL || `http://localhost:${PORT}`
 ).replace(/\/$/, "");
+const ALLOWED_ORIGIN = "http://localhost:3000";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
@@ -31,6 +32,21 @@ const swaggerSpec = swaggerJsdoc({
     servers: [{ url: SERVER_PUBLIC_URL }],
   },
   apis: [join(__dirname, "src/docs/swagger.js")],
+});
+
+app.use((req, res, next) => {
+  if (req.headers.origin === ALLOWED_ORIGIN) {
+    res.header("Access-Control-Allow-Origin", ALLOWED_ORIGIN);
+    res.header("Vary", "Origin");
+    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    res.header("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
+  }
+
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(204);
+  }
+
+  return next();
 });
 
 app.use(express.json());
