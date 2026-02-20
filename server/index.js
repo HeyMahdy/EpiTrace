@@ -15,10 +15,11 @@ import logsRouter from "./src/api/routes/logs.js";
 
 const app = express();
 const PORT = process.env.PORT || 8080;
+const frontend_url = process.env.URL
 const SERVER_PUBLIC_URL = (
   process.env.SERVER_PUBLIC_URL || `http://localhost:${PORT}`
 ).replace(/\/$/, "");
-const ALLOWED_ORIGIN = "http://localhost:3000";
+const ALLOWED_ORIGIN = frontend_url;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
