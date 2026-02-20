@@ -691,6 +691,31 @@
 
 /**
  * @openapi
+ * /github-token/monitor/{monitorId}:
+ *   get:
+ *     tags: [GithubToken]
+ *     summary: Get GitHub tokens associated with a monitor
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: monitorId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Monitor GitHub tokens fetched
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Monitor not found
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @openapi
  * /github-token/monitor/{monitorId}/add/{tokenId}:
  *   post:
  *     tags: [GithubToken]

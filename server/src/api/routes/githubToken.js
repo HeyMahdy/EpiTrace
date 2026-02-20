@@ -3,6 +3,7 @@ import {
   createGithubTokenController,
   getGithubTokensController,
   getGithubTokenController,
+  getGithubTokensForMonitorController,
   updateGithubTokenController,
   deleteGithubTokenController,
   addGithubTokenToMonitorController,
@@ -13,6 +14,7 @@ const router = express.Router();
 
 router.post("/", createGithubTokenController);
 router.get("/", getGithubTokensController);
+router.get("/monitor/:monitorId", getGithubTokensForMonitorController);
 router.get("/:id", getGithubTokenController);
 router.patch("/:id", updateGithubTokenController);
 router.delete("/:id", deleteGithubTokenController);

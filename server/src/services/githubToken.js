@@ -13,6 +13,16 @@ function mapTokenRow(row) {
 export async function createUserGithubToken(userId, data) {
   const { access_token } = data;
 
+  const userResult = await pool.query("SELECT id FROM users WHERE id = $1 LIMIT 1", [
+    userId,
+  ]);
+
+  if (!userResult.rows.length) {
+    const error = new Error("User not found");
+    error.code = "USER_NOT_FOUND";
+    throw error;
+  }
+
   const { rows } = await pool.query(
     `INSERT INTO user_github_tokens (user_id, access_token, is_active)
      VALUES ($1, $2, true)
@@ -115,6 +125,22 @@ export async function removeGithubTokenFromMonitor(monitorId, tokenId) {
   );
 
   if (!rowCount) throw new Error("Monitor GitHub token association not found");
+}
+
+/**
+ * Get GitHub tokens associated with a monitor
+ */
+export async function getGithubTokensForMonitor(monitorId) {
+  const { rows } = await pool.query(
+    `SELECT ugt.id, ugt.user_id, ugt.is_active, ugt.created_at, ugt.updated_at, RIGHT(ugt.access_token, 4) AS token_last4
+     FROM monitor_github_tokens mgt
+     INNER JOIN user_github_tokens ugt ON ugt.id = mgt.github_token_id
+     WHERE mgt.monitor_id = $1
+     ORDER BY mgt.created_at DESC`,
+    [monitorId],
+  );
+
+  return rows.map(mapTokenRow);
 }
 
 /**

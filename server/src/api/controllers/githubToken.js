@@ -7,6 +7,7 @@ import {
   deleteUserGithubToken,
   addGithubTokenToMonitor,
   removeGithubTokenFromMonitor,
+  getGithubTokensForMonitor,
 } from "../../services/githubToken.js";
 import {
   createGithubTokenSchema,
@@ -191,6 +192,34 @@ export async function addGithubTokenToMonitorController(req, res) {
     return res.status(500).json({
       success: false,
       error: "Failed to add GitHub token to monitor",
+    });
+  }
+}
+
+export async function getGithubTokensForMonitorController(req, res) {
+  try {
+    const userId = req.user.id;
+    const { monitorId } = req.params;
+
+    await getMonitorById(userId, monitorId);
+    const tokens = await getGithubTokensForMonitor(monitorId);
+
+    return res.status(200).json({
+      success: true,
+      data: tokens,
+    });
+  } catch (error) {
+    if (error.message === "Monitor not found") {
+      return res.status(404).json({
+        success: false,
+        error: error.message,
+      });
+    }
+
+    console.error("Error fetching monitor GitHub tokens:", error);
+    return res.status(500).json({
+      success: false,
+      error: "Failed to fetch monitor GitHub tokens",
     });
   }
 }
