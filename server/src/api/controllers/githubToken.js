@@ -39,6 +39,13 @@ export async function createGithubTokenController(req, res) {
       });
     }
 
+    if (error.code === "USER_NOT_FOUND" || error.code === "23503") {
+      return res.status(401).json({
+        success: false,
+        error: "Invalid token user",
+      });
+    }
+
     console.error("Error creating GitHub token:", error);
     return res.status(500).json({
       success: false,
