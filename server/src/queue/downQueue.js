@@ -5,7 +5,7 @@ export const downQueue = new Queue("down-monitors", {
   connection,
 });
 
-const downQueueEvents = new QueueEvents("down-monitors", { connection });
+export const downQueueEvents = new QueueEvents("down-monitors", { connection });
 
 downQueueEvents.on("waiting", ({ jobId }) => {
   console.log(`[down-monitors] waiting job id=${jobId}`);

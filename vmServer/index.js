@@ -85,3 +85,26 @@ const agent_worker = new Worker(
     concurrency: 5
   }
 ); // <-- Closes the
+
+console.log("Down monitor worker running on queue: down-monitors");
+
+let isShuttingDown = false;
+
+async function shutdown(signal) {
+  if (isShuttingDown) return;
+  isShuttingDown = true;
+  console.log(`Received ${signal}. Shutting down down-monitors worker...`);
+
+  try {
+    await agent_worker.close();
+    await myRedisConnection.quit();
+    console.log("down-monitors worker shutdown complete.");
+    process.exit(0);
+  } catch (error) {
+    console.error("Error during down-monitors worker shutdown:", error);
+    process.exit(1);
+  }
+}
+
+process.on("SIGINT", () => shutdown("SIGINT"));
+process.on("SIGTERM", () => shutdown("SIGTERM"));

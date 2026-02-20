@@ -3,7 +3,7 @@ import axios from "axios";
 import { pool } from "../config/db.js";
 import { connection } from "../config/redis.js";
 import { analysisQueue } from "./analysisQueue.js";
-import { downQueue } from "./downQueue.js";
+import { downQueue, downQueueEvents } from "./downQueue.js";
 /**
  * Runs when a monitor is started.
  * 1. Performs immediate check
@@ -209,3 +209,28 @@ const worker = new Worker(
 );
 
 console.log("Analysis worker running...");
+
+let isShuttingDown = false;
+
+async function shutdown(signal) {
+  if (isShuttingDown) return;
+  isShuttingDown = true;
+  console.log(`Received ${signal}. Shutting down analysis worker...`);
+
+  try {
+    await worker.close();
+    await analysisQueue.close();
+    await downQueue.close();
+    await downQueueEvents.close();
+    await connection.quit();
+    await pool.end();
+    console.log("Analysis worker shutdown complete.");
+    process.exit(0);
+  } catch (error) {
+    console.error("Error during analysis worker shutdown:", error);
+    process.exit(1);
+  }
+}
+
+process.on("SIGINT", () => shutdown("SIGINT"));
+process.on("SIGTERM", () => shutdown("SIGTERM"));

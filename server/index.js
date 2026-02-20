@@ -11,6 +11,7 @@ import monitorRouter from "./src/api/routes/monitor.js";
 import webhookRouter from "./src/api/routes/webhook.js";
 import githubTokenRouter from "./src/api/routes/githubToken.js";
 import alertRouter from "./src/api/routes/alert.js";
+import logsRouter from "./src/api/routes/logs.js";
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -55,6 +56,7 @@ app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use("/", healthRouter);
 app.use("/auth", authRouter);
 app.use("/alert", alertRouter);
+app.use("/logs", logsRouter);
 
 app.use(requireAuth); // Protect all routes below this middleware
 app.use("/monitor", monitorRouter);
