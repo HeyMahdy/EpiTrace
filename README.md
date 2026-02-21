@@ -4,6 +4,11 @@ EpiTrace is an incident monitoring and remediation backend designed for "Cline C
 
 It continuously checks your monitored endpoints, analyzes failures with Cline, sends actionable alerts, and can launch a second Cline job to create a real GitHub PR with an automated fix.
 
+## Links
+
+- Frontend (deployed): https://epi-trace-frontend.vercel.app/
+- Frontend repository: https://github.com/Shahidul-Khan2004/EpiTrace-Frontend
+
 ## What This Project Does
 
 - Monitors HTTP endpoints on a schedule (per monitor)
@@ -199,4 +204,8 @@ See:
   - `code_queue`
 - Cline auto-fix requires valid GitHub token association for monitor.
 - `GET /dev/reset-db` truncates all public tables; do not expose in production.
+
+## License
+
+- [LICENSE](LICENSE)
 
