@@ -5,7 +5,30 @@ import { connection } from "../config/redis.js";
 import { analysisQueue } from "./analysisQueue.js";
 import { downQueue, downQueueEvents } from "./downQueue.js";
 
-const DOWN_MONITOR_COOLDOWN_SECONDS = 60 * 60; // 1 hour
+const DOWN_MONITOR_ONCE_KEY_PREFIX = "down-monitor-once";
+
+async function enqueueDownMonitorOnce(monitor, monitorId, errorMessage) {
+  const onceKey = `${DOWN_MONITOR_ONCE_KEY_PREFIX}:${monitorId}`;
+  const marked = await connection.set(onceKey, "1", "NX");
+
+  if (marked !== "OK") {
+    console.log(
+      `[down-monitors] skipped (already enqueued once) for monitor ${monitorId}`,
+    );
+    return;
+  }
+
+  const downJob = await downQueue.add("monitor-down", {
+    monitorId,
+    error_message: errorMessage,
+    endpoint: monitor.url,
+    git_hub_repo: monitor.repo_link,
+  });
+
+  console.log(
+    `[down-monitors] enqueued job id=${downJob.id} name=${downJob.name} monitor=${monitorId}`,
+  );
+}
 /**
  * Runs when a monitor is started.
  * 1. Performs immediate check
@@ -105,31 +128,14 @@ async function performCheck(monitorId) {
     );
 
     if (!isUp) {
-      console.log(`[down-monitors] enqueue requested (HTTP ${response.status}) for monitor ${monitorId}`);
-      
-      // Check cooldown with Redis key
-      const cooldownKey = `cooldown:monitor-down:${monitorId}`;
-      const exists = await connection.get(cooldownKey);
-      
-      if (exists) {
-        console.log(`[down-monitors] skipped (cooldown active) for monitor ${monitorId}`);
-      } else {
-        // Set cooldown for 1 hour
-        await connection.setex(cooldownKey, DOWN_MONITOR_COOLDOWN_SECONDS, "1");
-        
-        const downJob = await downQueue.add(
-          "monitor-down",
-          {
-            monitorId,
-            error_message: `Monitor returned HTTP ${response.status}`,
-            endpoint: monitor.url,
-            git_hub_repo: monitor.repo_link,
-          }
-        );
-        console.log(
-          `[down-monitors] enqueued job id=${downJob.id} name=${downJob.name} monitor=${monitorId}`,
-        );
-      }
+      console.log(
+        `[down-monitors] enqueue requested (HTTP ${response.status}) for monitor ${monitorId}`,
+      );
+      await enqueueDownMonitorOnce(
+        monitor,
+        monitorId,
+        `Monitor returned HTTP ${response.status}`,
+      );
     }
 
     // Update monitor current status
@@ -155,30 +161,7 @@ async function performCheck(monitorId) {
     console.log(
       `[down-monitors] enqueue requested (request error) for monitor ${monitorId}: ${error.message}`,
     );
-    
-    // Check cooldown with Redis key
-    const cooldownKey = `cooldown:monitor-down:${monitorId}`;
-    const exists = await connection.get(cooldownKey);
-    
-    if (exists) {
-      console.log(`[down-monitors] skipped (cooldown active) for monitor ${monitorId}`);
-    } else {
-      // Set cooldown for 1 hour
-      await connection.setex(cooldownKey, DOWN_MONITOR_COOLDOWN_SECONDS, "1");
-      
-      const downJob = await downQueue.add(
-        "monitor-down",
-        {
-          monitorId,
-          error_message: error.message,
-          endpoint: monitor.url,
-          git_hub_repo: monitor.repo_link,
-        }
-      );
-      console.log(
-        `[down-monitors] enqueued job id=${downJob.id} name=${downJob.name} monitor=${monitorId}`,
-      );
-    }
+    await enqueueDownMonitorOnce(monitor, monitorId, error.message);
 
     await pool.query(
       `UPDATE monitors
