@@ -35,6 +35,13 @@ export async function createMonitorController(req, res) {
       });
     }
 
+    if (error.code === "MONITOR_LIMIT_REACHED") {
+      return res.status(409).json({
+        success: false,
+        error: "Only one monitor is allowed per account",
+      });
+    }
+
     console.error("Error creating monitor:", error);
     res.status(500).json({
       success: false,

@@ -9,6 +9,17 @@ export async function createMonitor(userId, data) {
     // start transaction
     await client.query("BEGIN");
 
+    // Enforce exactly one monitor per account.
+    const existingMonitor = await client.query(
+      "SELECT id FROM monitors WHERE user_id = $1 LIMIT 1",
+      [userId],
+    );
+    if (existingMonitor.rows.length > 0) {
+      const error = new Error("Monitor limit reached");
+      error.code = "MONITOR_LIMIT_REACHED";
+      throw error;
+    }
+
     const insertQuery = `
       INSERT INTO monitors
       (user_id, name, url, repo_link, method, request_header, request_body, check_interval, timeout, is_active)

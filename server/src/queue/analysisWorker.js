@@ -4,6 +4,8 @@ import { pool } from "../config/db.js";
 import { connection } from "../config/redis.js";
 import { analysisQueue } from "./analysisQueue.js";
 import { downQueue, downQueueEvents } from "./downQueue.js";
+
+const DOWN_MONITOR_COOLDOWN_SECONDS = 60 * 60; // 1 hour
 /**
  * Runs when a monitor is started.
  * 1. Performs immediate check
@@ -112,8 +114,8 @@ async function performCheck(monitorId) {
       if (exists) {
         console.log(`[down-monitors] skipped (cooldown active) for monitor ${monitorId}`);
       } else {
-        // Set cooldown for 30 minutes
-        await connection.setex(cooldownKey, 5 * 60, '1');
+        // Set cooldown for 1 hour
+        await connection.setex(cooldownKey, DOWN_MONITOR_COOLDOWN_SECONDS, "1");
         
         const downJob = await downQueue.add(
           "monitor-down",
@@ -161,8 +163,8 @@ async function performCheck(monitorId) {
     if (exists) {
       console.log(`[down-monitors] skipped (cooldown active) for monitor ${monitorId}`);
     } else {
-      // Set cooldown for 30 minutes
-      await connection.setex(cooldownKey, 5 * 60, '1');
+      // Set cooldown for 1 hour
+      await connection.setex(cooldownKey, DOWN_MONITOR_COOLDOWN_SECONDS, "1");
       
       const downJob = await downQueue.add(
         "monitor-down",
